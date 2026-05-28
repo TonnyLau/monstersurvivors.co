@@ -206,6 +206,25 @@ test("generated pages use lowercase canonical URLs and one h1", () => {
   }
 });
 
+test("generated pages include one Google tag immediately after head", () => {
+  const googleTagStart = "<!-- Google tag (gtag.js) -->";
+
+  for (const file of [
+    "index.html",
+    "new-games/index.html",
+    "all-tags/index.html",
+    "t/action/index.html",
+    "games/monster-wave-arena/index.html"
+  ]) {
+    const html = readDist(file);
+    const afterHead = html.slice(html.indexOf("<head>") + "<head>".length).trimStart();
+
+    assert.ok(afterHead.startsWith(googleTagStart), `${file} should place Google tag immediately after <head>`);
+    assert.equal((html.match(/https:\/\/www\.googletagmanager\.com\/gtag\/js\?id=G-LGKQRXTBCK/g) ?? []).length, 1);
+    assert.equal((html.match(/gtag\('config', 'G-LGKQRXTBCK'\);/g) ?? []).length, 1);
+  }
+});
+
 test("homepage renders sidebar navigation and dense imported game grid", () => {
   const html = readDist("index.html");
 
