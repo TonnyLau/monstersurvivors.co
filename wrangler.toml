@@ -1,3 +1,4 @@
 name = "monstersurvivors-co"
 compatibility_date = "2026-05-28"
+[site]
 bucket = "./dist"
