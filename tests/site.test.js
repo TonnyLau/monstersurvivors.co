@@ -559,7 +559,7 @@ test("footer includes social, primary, and legal navigation", () => {
     assertIncludes(html, label);
   }
 
-  assertIncludes(html, "Copyright © 2026 itch corp");
+  assertIncludes(html, "Copyright © 2026 arcadenest corp");
   assertIncludes(html, "footer-nav");
   assertIncludes(html, "footer-legal");
 });
