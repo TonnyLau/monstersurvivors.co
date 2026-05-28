@@ -378,8 +378,12 @@ test("game page includes secure iframe, loading state, breadcrumbs, and JSON-LD"
   const html = readDist("games/monster-wave-arena/index.html");
 
   assertIncludes(html, "Loading game...");
+  assertIncludes(html, 'data-fullscreen-button');
+  assertIncludes(html, 'aria-label="Enter fullscreen"');
+  assertIncludes(html, ">Fullscreen</button>");
   assertIncludes(html, 'sandbox="allow-scripts allow-same-origin allow-pointer-lock"');
   assertIncludes(html, 'allow="fullscreen; gamepad; autoplay; pointer-lock"');
+  assertIncludes(html, "allowfullscreen");
   assertIncludes(html, "breadcrumb");
   assertIncludes(html, "breadcrumb__mobile");
   assertIncludes(html, '<details class="content-accordion">');
@@ -482,11 +486,23 @@ test("stylesheet defines semantic variables and required UI states", () => {
     ".global-search",
     ".search-panel",
     ".dense-game-grid",
+    ".game-frame__fullscreen",
     ".content-accordion",
     ".footer-nav"
   ]) {
     assertIncludes(css, token);
   }
+});
+
+test("fullscreen script wires game frame controls to the Fullscreen API", () => {
+  const js = read("src/assets/js/site.js");
+
+  assertIncludes(js, "data-fullscreen-button");
+  assertIncludes(js, "requestFullscreen");
+  assertIncludes(js, "fullscreenchange");
+  assertIncludes(js, "button.hidden = true;");
+  assert.equal(js.includes("exitFullscreen"), false, "fullscreen button should not implement an exit action");
+  assert.equal(js.includes("Exit fullscreen"), false, "fullscreen button should not switch to exit copy");
 });
 
 test("stylesheet defines OnlineGames-style catalog density and hover polish", () => {

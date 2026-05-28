@@ -30,6 +30,54 @@
     });
   }
 
+  var fullscreenButtons = document.querySelectorAll("[data-fullscreen-button]");
+
+  function getFullscreenElement() {
+    return document.fullscreenElement || document.webkitFullscreenElement || null;
+  }
+
+  function requestFullscreen(element) {
+    if (element.requestFullscreen) {
+      return element.requestFullscreen();
+    }
+    if (element.webkitRequestFullscreen) {
+      return element.webkitRequestFullscreen();
+    }
+    return null;
+  }
+
+  function syncFullscreenButton(button) {
+    var frame = button.closest(".game-frame");
+    button.hidden = getFullscreenElement() === frame;
+  }
+
+  if (fullscreenButtons.length) {
+    Array.prototype.forEach.call(fullscreenButtons, function (button) {
+      var frame = button.closest(".game-frame");
+      if (!frame || (!frame.requestFullscreen && !frame.webkitRequestFullscreen)) {
+        button.hidden = true;
+        return;
+      }
+
+      button.addEventListener("click", function () {
+        button.hidden = true;
+        requestFullscreen(frame);
+      });
+    });
+
+    document.addEventListener("fullscreenchange", function () {
+      Array.prototype.forEach.call(fullscreenButtons, function (button) {
+        syncFullscreenButton(button);
+      });
+    });
+
+    document.addEventListener("webkitfullscreenchange", function () {
+      Array.prototype.forEach.call(fullscreenButtons, function (button) {
+        syncFullscreenButton(button);
+      });
+    });
+  }
+
   var root = document.querySelector("[data-search-root]");
   if (!root) return;
 

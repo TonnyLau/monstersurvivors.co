@@ -36,6 +36,7 @@ eleventyComputed:
   </div>
   <div class="game-frame">
     <div class="game-frame__loading">Loading game...</div>
+    <button type="button" class="game-frame__fullscreen" data-fullscreen-button aria-label="Enter fullscreen">Fullscreen</button>
     <iframe
       src="{{ game.iframe.src }}"
       title="Play {{ game.title }} Online"
