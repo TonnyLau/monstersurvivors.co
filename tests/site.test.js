@@ -9,7 +9,7 @@ import test from "node:test";
 const require = createRequire(import.meta.url);
 const root = process.cwd();
 const dist = join(root, "dist");
-const domain = "https://arcadenest.com";
+const domain = "https://arcadenest.online";
 const npmBin = process.platform === "win32" ? "npm.cmd" : "npm";
 const sidebarTags = [
   "2-player",
