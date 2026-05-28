@@ -1,5 +1,0 @@
-name = "monstersurvivors-co"
-compatibility_date = "2026-05-28"
-
-[assets]
-directory = "./_site"
