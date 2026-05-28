@@ -1,0 +1,6 @@
+---
+permalink: /search-index.json
+eleventyExcludeFromCollections: true
+---
+{% set currentLocale = locale | default(site.locale) | default("en-US") %}
+{{ games.games | searchIndexRecords(currentLocale) | json | safe }}

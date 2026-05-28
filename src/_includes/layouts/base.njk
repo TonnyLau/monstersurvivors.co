@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ title or site.name }}</title>
+    <meta name="description" content="{{ description or 'Play free browser games instantly on ArcadeNest.' }}">
+    <link rel="canonical" href="{{ site.domain }}{{ page.url }}">
+    <meta property="og:title" content="{{ title or site.name }}">
+    <meta property="og:description" content="{{ description or 'Play free browser games instantly on ArcadeNest.' }}">
+    <meta property="og:url" content="{{ site.domain }}{{ page.url }}">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary_large_image">
+    <link rel="icon" href="/assets/images/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="/assets/css/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <button class="mobile-menu-button" type="button" data-sidebar-toggle aria-controls="game-sidebar" aria-expanded="false">
+        <span class="mobile-menu-button__bar"></span>
+        <span class="mobile-menu-button__bar"></span>
+        <span class="mobile-menu-button__bar"></span>
+        <span class="sr-only">Open game menu</span>
+      </button>
+      <a class="site-brand" href="/">{{ site.name }}</a>
+      <nav class="site-nav" aria-label="Main navigation">
+        {% for item in navigation %}
+          <a class="site-nav__link{% if page.url == item.href %} site-nav__link--active{% endif %}" href="{{ item.href }}">{{ item.label }}</a>
+        {% endfor %}
+      </nav>
+      <div class="global-search" data-search-root>
+        <label class="sr-only" for="site-search">Search games</label>
+        <input id="site-search" data-search-input type="search" placeholder="Search games" autocomplete="off" spellcheck="false">
+        <button class="global-search__button" type="button" data-search-submit>Search</button>
+        <div class="search-panel" data-search-panel hidden>
+          <div class="search-panel__results" data-search-results></div>
+          <p class="search-panel__empty" data-search-empty hidden>No games found</p>
+        </div>
+      </div>
+      <div class="header-auth-slot" aria-hidden="true"></div>
+    </header>
+    <div class="sidebar-scrim" data-sidebar-close hidden></div>
+    <main>
+      {{ content | safe }}
+    </main>
+    <footer class="site-footer">
+      <nav class="footer-social" aria-label="Social links">
+        <a href="#" aria-label="Twitter">Twitter</a>
+        <a href="#" aria-label="Facebook">Facebook</a>
+      </nav>
+      <nav class="footer-nav" aria-label="Footer navigation">
+        <a href="/about/">ABOUT</a>
+        <a href="/faq/">FAQ</a>
+        <a href="/blog/">BLOG</a>
+        <a href="/contact/">CONTACT US</a>
+      </nav>
+      <p class="footer-legal">
+        Copyright © 2026 itch corp
+        <span>·</span>
+        <a href="/directory/">Directory</a>
+        <span>·</span>
+        <a href="/terms/">Terms</a>
+        <span>·</span>
+        <a href="/privacy/">Privacy</a>
+        <span>·</span>
+        <a href="/cookies/">Cookies</a>
+      </p>
+    </footer>
+    <script src="/assets/js/site.js" defer></script>
+  </body>
+</html>

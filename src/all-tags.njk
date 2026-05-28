@@ -1,0 +1,24 @@
+---
+layout: layouts/base.njk
+title: All Tags - ArcadeNest
+description: Browse every game tag in the ArcadeNest catalog.
+permalink: /all-tags/
+---
+<section class="page-hero tag-page-hero">
+  <h1>All Tags</h1>
+  <p>Explore every imported tag and jump to filtered game lists by count.</p>
+</section>
+
+<section class="section tag-list-section">
+  <div class="tag-list">
+    {% for tag in games.allTags %}
+      <a class="tag-list__item{% if tag.isSidebar %} tag-list__item--curated{% endif %}" href="{{ tag.href }}">
+        <span>{{ tag.label }}</span>
+        <small>{{ tag.slug }}</small>
+        <strong>{{ tag.count }}</strong>
+      </a>
+    {% endfor %}
+  </div>
+</section>
+
+<script type="application/ld+json">{{ {"@context":"https://schema.org","@type":"CollectionPage","name":"All Tags","description":"Every game tag on ArcadeNest.","url":site.domain + page.url} | json | safe }}</script>

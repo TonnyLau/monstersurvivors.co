@@ -1,0 +1,52 @@
+---
+layout: layouts/base.njk
+pagination:
+  data: games.categories
+  size: 1
+  alias: category
+permalink: "/{{ category.slug }}/"
+eleventyComputed:
+  title: "{{ category.title }} - ArcadeNest"
+  description: "{{ category.description }}"
+---
+{% import "components/game-card.njk" as cards %}
+{% set currentLocale = locale | default(site.locale) | default("en-US") %}
+{% set categoryGames = games.games | gamesByCategory(category.slug, currentLocale) %}
+<section class="page-hero">
+  <h1>{{ category.title }}</h1>
+  <p>{{ category.description }}</p>
+</section>
+
+<section class="section">
+  <div class="section__heading">
+    <h2>Featured {{ category.title }}</h2>
+    <p>Playable and upcoming games in this category.</p>
+  </div>
+  <div class="game-grid">
+    {% for game in categoryGames %}
+      {{ cards.card(game, false) }}
+    {% endfor %}
+  </div>
+</section>
+
+<section class="section section--surface">
+  <div class="section__heading">
+    <h2>More Game Categories</h2>
+  </div>
+  <div class="category-grid">
+    {% for item in games.categories %}
+      {% if item.slug != category.slug %}
+        <a class="category-card" href="/{{ item.slug }}/">
+          <span>{{ item.title }}</span>
+          <small>{{ item.description }}</small>
+        </a>
+      {% endif %}
+    {% endfor %}
+    <a class="category-card" href="/new-games/">
+      <span>New Games</span>
+      <small>See the latest published games first.</small>
+    </a>
+  </div>
+</section>
+
+<script type="application/ld+json">{{ {"@context":"https://schema.org","@type":"CollectionPage","name":category.title,"description":category.description,"url":site.domain + page.url} | json | safe }}</script>

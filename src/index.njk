@@ -1,0 +1,54 @@
+---
+layout: layouts/base.njk
+title: ArcadeNest Free Online Games - Racing & Arcade
+description: Play free online games on ArcadeNest, including racing, simulator, drift, car, clicker, sniper, survival, puzzle, and arcade games.
+---
+{% import "components/game-card.njk" as cards %}
+{% import "components/sidebar-nav.njk" as sidebar %}
+{% set currentLocale = locale | default(site.locale) | default("en-US") %}
+{% set rankedGames = games.games | rankGamesForLocale(currentLocale) %}
+<div class="layout-shell layout-shell--catalog">
+  {{ sidebar.catalogSidebar(games.sidebarTags, page.url, "") }}
+
+  <div class="catalog-content">
+    <section class="catalog-hero">
+      <h1>ArcadeNest Free Online Games</h1>
+      <p>ArcadeNest keeps {{ games.games.length }} free online games ready to launch instantly, with racing games, simulator games, drift games, car games, clicker games, sniper games, survival games, puzzle games, and arcade games you can play without an install.</p>
+    </section>
+
+    <section class="catalog-section" id="featured-games" aria-labelledby="featured-games-title">
+      <div class="section__heading">
+        <h2 id="featured-games-title">Play Free Online Games on ArcadeNest</h2>
+        <p>Scan the ArcadeNest catalog for fast browser games across racing, action, sports, shooting, driving, puzzle, and arcade categories.</p>
+      </div>
+      <div class="dense-game-grid dense-game-grid--home">
+        {% for game in rankedGames %}
+          {{ cards.denseCard(game) }}
+        {% endfor %}
+      </div>
+    </section>
+
+    <section class="catalog-section homepage-seo" aria-labelledby="arcadenest-guide-title">
+      <div class="section__heading">
+        <h2 id="arcadenest-guide-title">Find Your Next Browser Game</h2>
+        <p>ArcadeNest is built for players who want quick sessions, clear categories, and free online games that open directly in the browser.</p>
+      </div>
+      <div class="homepage-seo__grid">
+        <article class="homepage-seo__card">
+          <h3>Racing, Drift, and Car Games</h3>
+          <p>Start with racing games, drift games, and car games when you want speed, tight turns, highway traffic, stunt tracks, or vehicle challenges that feel familiar to US and European arcade players.</p>
+        </article>
+        <article class="homepage-seo__card">
+          <h3>Simulator, Survival, and Sniper Games</h3>
+          <p>ArcadeNest also highlights simulator games, survival games, and sniper games for players who prefer objectives, precision, upgrades, waves, and longer browser game sessions.</p>
+        </article>
+        <article class="homepage-seo__card">
+          <h3>Clicker, Puzzle, and Arcade Games</h3>
+          <p>For relaxed play, choose clicker games, puzzle games, sports games, io games, or classic arcade games from ArcadeNest and jump into a free online game in seconds.</p>
+        </article>
+      </div>
+    </section>
+  </div>
+</div>
+
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"{{ site.name }}","url":"{{ site.domain }}/","potentialAction":{"@type":"SearchAction","target":"{{ site.domain }}/?q={search_term_string}","query-input":"required name=search_term_string"}}</script>

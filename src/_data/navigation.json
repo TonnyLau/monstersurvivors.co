@@ -1,0 +1,7 @@
+[
+  { "label": "Home", "href": "/" },
+  { "label": "Survival", "href": "/survival/" },
+  { "label": "Action", "href": "/action/" },
+  { "label": "Arcade", "href": "/arcade/" },
+  { "label": "New Games", "href": "/new-games/" }
+]

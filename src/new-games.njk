@@ -1,0 +1,25 @@
+---
+layout: layouts/base.njk
+title: New Games - ArcadeNest
+description: Browse the newest games published on ArcadeNest.
+permalink: /new-games/
+---
+{% import "components/game-card.njk" as cards %}
+{% set newest = games.games | newestGames %}
+<section class="page-hero">
+  <h1>New Games</h1>
+  <p>Browse the latest live and upcoming games, sorted by publication date.</p>
+</section>
+
+<section class="section">
+  <div class="section__heading">
+    <h2>Newest Browser Games</h2>
+  </div>
+  <div class="game-grid">
+    {% for game in newest %}
+      {{ cards.card(game, false) }}
+    {% endfor %}
+  </div>
+</section>
+
+<script type="application/ld+json">{{ {"@context":"https://schema.org","@type":"CollectionPage","name":"New Games","description":"Newest games on ArcadeNest.","url":site.domain + page.url} | json | safe }}</script>

@@ -1,0 +1,47 @@
+---
+permalink: /sitemap.xml
+eleventyExcludeFromCollections: true
+---
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>{{ site.domain }}/</loc>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+  {% for category in games.categories %}
+  <url>
+    <loc>{{ site.domain }}/{{ category.slug }}/</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  {% endfor %}
+  <url>
+    <loc>{{ site.domain }}/new-games/</loc>
+    <lastmod>{{ games.games | maxPublishedAt }}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>{{ site.domain }}/all-tags/</loc>
+    <lastmod>{{ games.games | maxPublishedAt }}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  {% for tag in games.allTags %}
+  <url>
+    <loc>{{ site.domain }}/t/{{ tag.slug }}/</loc>
+    <lastmod>{{ games.games | maxPublishedAt }}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>{% if tag.isSidebar %}0.8{% else %}0.5{% endif %}</priority>
+  </url>
+  {% endfor %}
+  {% for game in liveGames %}
+  <url>
+    <loc>{{ site.domain }}/games/{{ game.slug }}/</loc>
+    <lastmod>{{ game.publishedAt }}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  {% endfor %}
+</urlset>

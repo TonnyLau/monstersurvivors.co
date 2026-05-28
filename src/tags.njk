@@ -1,0 +1,38 @@
+---
+layout: layouts/base.njk
+pagination:
+  data: games.allTags
+  size: 1
+  alias: tag
+permalink: "/t/{{ tag.slug }}/"
+eleventyComputed:
+  title: "{{ tag.label }} Games - ArcadeNest"
+  description: "Play {{ tag.count }} free online {{ tag.label }} games on ArcadeNest."
+---
+{% import "components/game-card.njk" as cards %}
+{% import "components/sidebar-nav.njk" as sidebar %}
+{% set currentLocale = locale | default(site.locale) | default("en-US") %}
+{% set tagGames = games.games | gamesByTag(tag.slug, currentLocale) %}
+<div class="layout-shell layout-shell--catalog">
+  {{ sidebar.catalogSidebar(games.sidebarTags, page.url, tag.slug) }}
+
+  <div class="catalog-content">
+    <section class="catalog-hero tag-page-hero">
+      <h1>{{ tag.label }} Games</h1>
+      <p>{{ tag.count }} games tagged {{ tag.slug }}.</p>
+    </section>
+
+    <section class="catalog-section" aria-labelledby="tag-games-title">
+      <div class="section__heading">
+        <h2 id="tag-games-title">Play {{ tag.label }} Games</h2>
+      </div>
+      <div class="dense-game-grid">
+        {% for game in tagGames %}
+          {{ cards.denseCard(game) }}
+        {% endfor %}
+      </div>
+    </section>
+  </div>
+</div>
+
+<script type="application/ld+json">{{ {"@context":"https://schema.org","@type":"CollectionPage","name":tag.label + " Games","description":"Games tagged " + tag.slug + " on ArcadeNest.","url":site.domain + page.url} | json | safe }}</script>

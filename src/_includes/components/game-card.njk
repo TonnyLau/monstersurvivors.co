@@ -1,0 +1,36 @@
+{% macro card(game, featured=false) %}
+<article class="game-card{% if featured %} card--featured{% endif %}{% if game.status == 'coming-soon' %} card--coming-soon{% endif %}">
+  <div class="game-card__media">
+    <img src="{{ game.thumbnail.src }}" width="{{ game.thumbnail.width }}" height="{{ game.thumbnail.height }}" alt="{{ game.thumbnail.alt }}">
+    {% if game.status == 'coming-soon' %}
+      <span class="game-card__overlay">Coming Soon</span>
+    {% endif %}
+  </div>
+  <div class="game-card__body">
+    <div class="game-card__meta">
+      {% if featured %}<span class="badge badge--featured">Featured</span>{% endif %}
+      {% if game.status == 'live' %}
+        <span class="badge badge--live">Live</span>
+      {% else %}
+        <span class="badge badge--soon">Coming Soon</span>
+      {% endif %}
+    </div>
+    <h3>{{ game.title }}</h3>
+    <p>{{ game.shortDescription }}</p>
+    {% if game.status == 'live' %}
+      <a class="button button--primary" href="/games/{{ game.slug }}/">Play Now</a>
+    {% else %}
+      <button class="button button--disabled" type="button" disabled>Coming Soon</button>
+    {% endif %}
+  </div>
+</article>
+{% endmacro %}
+
+{% macro denseCard(game) %}
+<article class="dense-game-card">
+  <a class="dense-game-card__link" href="/games/{{ game.slug }}/" aria-label="Play {{ game.title }}">
+    <img src="{{ game.thumbnail.src }}" width="{{ game.thumbnail.width }}" height="{{ game.thumbnail.height }}" alt="{{ game.thumbnail.alt }}" loading="lazy">
+    <span>{{ game.title }}</span>
+  </a>
+</article>
+{% endmacro %}

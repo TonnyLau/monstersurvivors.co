@@ -1,0 +1,97 @@
+---
+layout: layouts/base.njk
+pagination:
+  data: liveGames
+  size: 1
+  alias: game
+permalink: "/games/{{ game.slug }}/"
+eleventyComputed:
+  title: "{{ game.seo.title }}"
+  description: "{{ game.seo.description }}"
+---
+{% import "components/game-card.njk" as cards %}
+{% set currentLocale = locale | default(site.locale) | default("en-US") %}
+{% set primaryTag = games.allTags | tagBySlug(game.primaryTag) %}
+<nav class="breadcrumb" aria-label="Breadcrumb">
+  <a href="/">Home</a>
+  <span>/</span>
+  <a href="/t/{{ primaryTag.slug }}/">{{ primaryTag.label }}</a>
+  <span>/</span>
+  <span>{{ game.title }}</span>
+</nav>
+<nav class="breadcrumb breadcrumb__mobile" aria-label="Mobile breadcrumb">
+  <span>...</span>
+  <span>/</span>
+  <span>{{ game.title }}</span>
+</nav>
+
+<section class="page-hero">
+  <h1>{{ game.title }}</h1>
+  <p>{{ game.description }}</p>
+</section>
+
+<section class="section">
+  <div class="section__heading">
+    <h2>Play {{ game.title }} Online</h2>
+  </div>
+  <div class="game-frame">
+    <div class="game-frame__loading">Loading game...</div>
+    <iframe
+      src="{{ game.iframe.src }}"
+      title="Play {{ game.title }} Online"
+      loading="lazy"
+      sandbox="{{ game.iframe.sandbox or 'allow-scripts allow-same-origin allow-pointer-lock' }}"
+      allow="{{ game.iframe.allow or 'fullscreen; gamepad; autoplay; pointer-lock' }}"
+      allowfullscreen>
+    </iframe>
+  </div>
+</section>
+
+<section class="section accordion-group" aria-label="{{ game.title }} guide sections">
+  <details class="content-accordion">
+    <summary>About {{ game.title }}</summary>
+  <p>{{ game.description }} This browser game page adds original guidance and context so players can understand the challenge before the embedded game loads.</p>
+  </details>
+
+  <details class="content-accordion">
+    <summary>How to Play</summary>
+    <ul>
+      {% for instruction in game.instructions %}
+        <li>{{ instruction }}</li>
+      {% endfor %}
+    </ul>
+  </details>
+
+  <details class="content-accordion">
+    <summary>Game Features</summary>
+    <div class="feature-list">
+      {% for feature in game.features %}
+        <span>{{ feature }}</span>
+      {% endfor %}
+    </div>
+  </details>
+
+  <details class="content-accordion">
+    <summary>Frequently Asked Questions</summary>
+    {% for item in game.faq %}
+      <article class="faq-item">
+        <h3>{{ item.question }}</h3>
+        <p>{{ item.answer }}</p>
+      </article>
+    {% endfor %}
+  </details>
+</section>
+
+<section class="section section--surface">
+  <div class="section__heading">
+    <h2>More {{ primaryTag.label }} Games</h2>
+  </div>
+  <div class="game-grid">
+    {% for related in game.relatedGames | relatedGameRecords(games.games, currentLocale) %}
+      {{ cards.card(related, false) }}
+    {% endfor %}
+  </div>
+</section>
+
+<script type="application/ld+json">{{ {"@context":"https://schema.org","@type":"VideoGame","name":game.title,"description":game.description,"url":site.domain + page.url,"genre":primaryTag.label,"operatingSystem":"Web browser","applicationCategory":"Game"} | json | safe }}</script>
+<script type="application/ld+json">{{ {"@context":"https://schema.org","@type":"FAQPage","mainEntity":game.faq} | json | safe }}</script>
