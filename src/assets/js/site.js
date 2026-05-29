@@ -46,14 +46,19 @@
     return null;
   }
 
+  function gameFrameForButton(button) {
+    var section = button.closest(".section");
+    return section ? section.querySelector(".game-frame") : null;
+  }
+
   function syncFullscreenButton(button) {
-    var frame = button.closest(".game-frame");
+    var frame = gameFrameForButton(button);
     button.hidden = getFullscreenElement() === frame;
   }
 
   if (fullscreenButtons.length) {
     Array.prototype.forEach.call(fullscreenButtons, function (button) {
-      var frame = button.closest(".game-frame");
+      var frame = gameFrameForButton(button);
       if (!frame || (!frame.requestFullscreen && !frame.webkitRequestFullscreen)) {
         button.hidden = true;
         return;
