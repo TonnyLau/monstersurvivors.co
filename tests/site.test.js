@@ -95,6 +95,16 @@ function gameSlugsFromHtml(html) {
   return [...html.matchAll(/href="\/games\/([a-z0-9-]+)\/"/g)].map((match) => match[1]);
 }
 
+function wordDensity(text, word) {
+  const words = text.match(/[a-z0-9]+/gi) ?? [];
+  const matches = text.match(new RegExp(`\\b${word}\\b`, "gi")) ?? [];
+  return words.length === 0 ? 0 : matches.length / words.length;
+}
+
+function assertNoImportedGuideHeadings(text, message) {
+  assert.doesNotMatch(text, /(?:^|\s)(?:Controls|How\s+To\s+Play)(?:\s|$)/, message);
+}
+
 function loadLocaleRanking() {
   return require("../src/_data/locale-ranking.cjs");
 }
@@ -170,6 +180,13 @@ test("embed.json imports into complete internal game records", () => {
     assert.ok(game.thumbnail?.src, `${game.slug} should include thumbnail.src`);
     assert.ok(game.thumbnail?.alt, `${game.slug} should include thumbnail.alt`);
     assert.ok(game.iframe?.src, `${game.slug} live games should include iframe.src`);
+    assert.ok(Array.isArray(game.guide?.overview) && game.guide.overview.length > 0, `${game.slug} should include guide.overview`);
+    assert.ok(Array.isArray(game.guide?.controls) && game.guide.controls.length > 0, `${game.slug} should include guide.controls`);
+    assert.ok(Array.isArray(game.guide?.howToPlay) && game.guide.howToPlay.length > 0, `${game.slug} should include guide.howToPlay`);
+    assert.ok(Array.isArray(game.guide?.tips) && game.guide.tips.length > 0, `${game.slug} should include guide.tips`);
+    assert.ok(Array.isArray(game.guide?.longTailTerms), `${game.slug} should include guide.longTailTerms`);
+    assertNoImportedGuideHeadings(game.description, `${game.slug} description should not expose imported guide headings`);
+    assertNoImportedGuideHeadings(game.guide.overview.join(" "), `${game.slug} overview should not expose imported guide headings`);
     assert.ok(slugs.has(game.slug), `${game.slug} should be present in slug set`);
   }
 
@@ -177,6 +194,45 @@ test("embed.json imports into complete internal game records", () => {
   assert.equal(monster.primaryTag, "action");
   assert.ok(monster.tags.includes("survival"));
   assert.ok(monster.tags.includes("battle"));
+
+  const driftKing = catalog.games.find((game) => game.slug === "drift-king");
+  assert.deepEqual(
+    driftKing.guide.longTailTerms.slice(0, 3),
+    ["drift game online", "free drift games no download", "3D drift simulator"]
+  );
+
+  const driftCopy = [
+    driftKing.description,
+    ...driftKing.guide.overview,
+    ...driftKing.guide.howToPlay.map((step) => `${step.title} ${step.text}`),
+    ...driftKing.guide.tips,
+    ...driftKing.features,
+    ...driftKing.instructions,
+    ...driftKing.faq.map((item) => `${item.question} ${item.answer}`),
+    ...driftKing.guide.longTailTerms
+  ].join(" ");
+  assert.ok(wordDensity(driftCopy, "game") < 0.04, "drift-king normalized copy should keep generic game density below 4%");
+  assert.match(driftCopy, /\bdrift\b/i);
+  assert.match(driftCopy, /\bonline\b/i);
+  assert.match(driftCopy, /\bsimulator\b/i);
+});
+
+test("catalog derives guide controls from descriptions and tag fallbacks", () => {
+  const catalog = loadNormalizedCatalog();
+  const driftKing = catalog.games.find((game) => game.slug === "drift-king");
+  const golfBit = catalog.games.find((game) => game.slug === "golf-bit");
+
+  assert.ok(driftKing, "drift-king should exist");
+  assert.ok(golfBit, "golf-bit should exist");
+
+  const driftControls = driftKing.guide.controls.map((control) => control.input);
+  for (const input of ["WASD or arrow keys", "M", "C", "R"]) {
+    assert.ok(driftControls.includes(input), `drift-king controls should include ${input}`);
+  }
+
+  const golfControls = golfBit.guide.controls.map((control) => control.input.toLowerCase());
+  assert.ok(golfControls.some((input) => input.includes("mouse")), "golf-bit fallback controls should include mouse input");
+  assert.ok(golfControls.some((input) => input.includes("touch")), "golf-bit fallback controls should include mobile touch input");
 });
 
 test("Eleventy builds all required v1 routes", async () => {
@@ -395,7 +451,7 @@ test("new games page sorts games by publishedAt descending", () => {
   assert.deepEqual([...positions].sort((a, b) => a - b), positions);
 });
 
-test("game page includes secure iframe, loading state, breadcrumbs, and JSON-LD", () => {
+test("game page includes secure iframe, loading state, breadcrumbs, visible guide, and JSON-LD", () => {
   const html = readDist("games/monster-wave-arena/index.html");
   const controlsStart = html.indexOf('<div class="game-play-header">');
   const frameStart = html.indexOf('<div class="game-frame">');
@@ -414,11 +470,33 @@ test("game page includes secure iframe, loading state, breadcrumbs, and JSON-LD"
   assertIncludes(html, "allowfullscreen");
   assertIncludes(html, "breadcrumb");
   assertIncludes(html, "breadcrumb__mobile");
-  assertIncludes(html, '<details class="content-accordion">');
-  assertIncludes(html, "<summary>About Monster Wave Arena</summary>");
-  assert.equal((html.match(/<details class="content-accordion" open/g) ?? []).length, 0);
+  assertIncludes(html, 'class="section game-guide"');
+  assertIncludes(html, "<h2>Controls</h2>");
+  assertIncludes(html, "<h2>How to Play Monster Wave Arena</h2>");
+  assertIncludes(html, "<h2>Tips &amp; Tricks</h2>");
+  assertIncludes(html, "<h2>Game Features</h2>");
+  assertIncludes(html, "<h2>Instructions</h2>");
+  assertIncludes(html, "<h2>Related Searches</h2>");
+  assertIncludes(html, "<h2>Frequently Asked Questions</h2>");
+  assertIncludes(html, 'class="control-list"');
+  assert.equal(html.includes('<details class="content-accordion">'), false, "game guide should not use folded details accordions");
   assertIncludes(html, '"@type":"VideoGame"');
   assertIncludes(html, '"@type":"FAQPage"');
+});
+
+test("drift detail page uses clean hero copy and natural long-tail terms", () => {
+  const html = readDist("games/drift-king/index.html");
+  const hero = html.match(/<section class="page-hero">[\s\S]*?<\/section>/)?.[0] ?? "";
+
+  assert.ok(hero, "drift-king should render a hero");
+  assertNoImportedGuideHeadings(hero);
+  assertIncludes(html, "<h2>Related Searches</h2>");
+  assertIncludes(html, "drift game online");
+  assertIncludes(html, "free drift games no download");
+  assertIncludes(html, "3D drift simulator");
+  assertIncludes(html, "browser drifting challenge");
+  assert.equal((html.match(/arcadenest\.online/gi) ?? []).length <= 3, true, "detail page should not stack repeated domain text");
+  assert.ok(wordDensity(html, "game") < 0.04, "drift-king detail HTML should keep generic game density below 4%");
 });
 
 test("tag pages, all-tags, and homepage include required content and JSON-LD", () => {
@@ -515,11 +593,35 @@ test("stylesheet defines semantic variables and required UI states", () => {
     ".search-panel",
     ".dense-game-grid",
     ".game-frame__fullscreen",
-    ".content-accordion",
+    ".game-guide",
+    ".guide-card",
+    ".control-list",
+    ".control-key",
+    ".tips-list",
+    ".faq-list",
     ".footer-nav"
   ]) {
     assertIncludes(css, token);
   }
+});
+
+test("stylesheet defines responsive expanded guide layout", () => {
+  const css = read("src/assets/css/styles.css");
+  const guide = cssBlock(css, ".game-guide");
+  const card = cssBlock(css, ".guide-card");
+  const controlItem = cssBlock(css, ".control-list__item");
+  const key = cssBlock(css, ".control-key");
+  const faq = cssBlock(css, ".faq-list");
+  const mobile = mediaBlock(css, "(max-width: 640px)");
+
+  assertIncludes(guide, "grid-template-columns: repeat(2, minmax(0, 1fr));");
+  assertIncludes(card, "border-radius: var(--radius);");
+  assertIncludes(controlItem, "grid-template-columns: minmax(112px, 0.8fr) minmax(0, 1.2fr);");
+  assertIncludes(key, "overflow-wrap: anywhere;");
+  assertIncludes(faq, "display: grid;");
+  assertIncludes(mobile, ".game-guide");
+  assertIncludes(mobile, ".control-list__item");
+  assertIncludes(mobile, "grid-template-columns: 1fr;");
 });
 
 test("fullscreen script wires game frame controls to the Fullscreen API", () => {

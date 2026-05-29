@@ -52,39 +52,87 @@ eleventyComputed:
   </div>
 </section>
 
-<section class="section accordion-group" aria-label="{{ game.title }} guide sections">
-  <details class="content-accordion">
-    <summary>About {{ game.title }}</summary>
-  <p>{{ game.description }} This browser game page adds original guidance and context so players can understand the challenge before the embedded game loads.</p>
-  </details>
+<section class="section game-guide" aria-label="{{ game.title }} guide sections">
+  <article class="guide-card guide-card--wide">
+    <h2>Overview</h2>
+    {% for paragraph in game.guide.overview %}
+      <p>{{ paragraph }}</p>
+    {% endfor %}
+  </article>
 
-  <details class="content-accordion">
-    <summary>How to Play</summary>
-    <ul>
-      {% for instruction in game.instructions %}
-        <li>{{ instruction }}</li>
+  <article class="guide-card">
+    <h2>Controls</h2>
+    <dl class="control-list">
+      {% for control in game.guide.controls %}
+        <div class="control-list__item">
+          <dt><span class="control-key">{{ control.input }}</span></dt>
+          <dd>{{ control.action }}</dd>
+        </div>
+      {% endfor %}
+    </dl>
+  </article>
+
+  <article class="guide-card">
+    <h2>How to Play {{ game.title }}</h2>
+    <ol class="how-to-list">
+      {% for step in game.guide.howToPlay %}
+        <li>
+          <h3>{{ step.title }}</h3>
+          <p>{{ step.text }}</p>
+        </li>
+      {% endfor %}
+    </ol>
+  </article>
+
+  <article class="guide-card">
+    <h2>Tips &amp; Tricks</h2>
+    <ul class="tips-list">
+      {% for tip in game.guide.tips %}
+        <li>{{ tip }}</li>
       {% endfor %}
     </ul>
-  </details>
+  </article>
 
-  <details class="content-accordion">
-    <summary>Game Features</summary>
-    <div class="feature-list">
+  <article class="guide-card">
+    <h2>Game Features</h2>
+    <div class="feature-list guide-feature-list">
       {% for feature in game.features %}
         <span>{{ feature }}</span>
       {% endfor %}
     </div>
-  </details>
+  </article>
 
-  <details class="content-accordion">
-    <summary>Frequently Asked Questions</summary>
-    {% for item in game.faq %}
-      <article class="faq-item">
-        <h3>{{ item.question }}</h3>
-        <p>{{ item.answer }}</p>
-      </article>
-    {% endfor %}
-  </details>
+  <article class="guide-card">
+    <h2>Instructions</h2>
+    <ul class="instruction-list">
+      {% for instruction in game.instructions %}
+        <li>{{ instruction }}</li>
+      {% endfor %}
+    </ul>
+  </article>
+
+  {% if game.guide.longTailTerms and game.guide.longTailTerms.length %}
+    <article class="guide-card">
+      <h2>Related Searches</h2>
+      <div class="related-search-list">
+        {% for term in game.guide.longTailTerms %}
+          <span>{{ term }}</span>
+        {% endfor %}
+      </div>
+    </article>
+  {% endif %}
+
+  <article class="guide-card guide-card--wide">
+    <h2>Frequently Asked Questions</h2>
+    <div class="faq-list">
+      {% for item in game.faq %}
+        <article class="faq-item">
+          <h3>{{ item.question }}</h3>
+          <p>{{ item.answer }}</p>
+        </article>
+      {% endfor %}
+    </div>
+  </article>
 </section>
 
 <section class="section section--surface">
