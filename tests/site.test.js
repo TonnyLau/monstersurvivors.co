@@ -376,18 +376,18 @@ test("new games page sorts games by publishedAt descending", () => {
 
 test("game page includes secure iframe, loading state, breadcrumbs, and JSON-LD", () => {
   const html = readDist("games/monster-wave-arena/index.html");
-  const headingStart = html.indexOf('<div class="game-play-header">');
+  const controlsStart = html.indexOf('<div class="game-play-header">');
   const frameStart = html.indexOf('<div class="game-frame">');
   const buttonStart = html.indexOf('data-fullscreen-button');
 
   assertIncludes(html, "Loading game...");
   assertIncludes(html, '<div class="game-play-header">');
-  assertIncludes(html, '<h2 class="game-play-header__title">Play Monster Wave Arena Online</h2>');
+  assert.equal(html.includes('<h2 class="game-play-header__title">Play Monster Wave Arena Online</h2>'), false);
   assertIncludes(html, 'data-fullscreen-button');
   assertIncludes(html, 'aria-label="Enter fullscreen"');
   assertIncludes(html, '<svg class="game-frame__fullscreen-icon"');
   assertIncludes(html, '<span>Fullscreen</span>');
-  assert.ok(headingStart !== -1 && buttonStart > headingStart && buttonStart < frameStart, "fullscreen button should render in the title control bar before the game frame");
+  assert.ok(controlsStart !== -1 && buttonStart > controlsStart && buttonStart < frameStart, "fullscreen button should render in the control bar before the game frame");
   assertIncludes(html, 'sandbox="allow-scripts allow-same-origin allow-pointer-lock"');
   assertIncludes(html, 'allow="fullscreen; gamepad; autoplay; pointer-lock"');
   assertIncludes(html, "allowfullscreen");
@@ -518,14 +518,13 @@ test("fullscreen script wires game frame controls to the Fullscreen API", () => 
 test("stylesheet places fullscreen control in the game title bar", () => {
   const css = read("src/assets/css/styles.css");
   const header = cssBlock(css, ".game-play-header");
-  const title = cssBlock(css, ".game-play-header__title");
   const button = cssBlock(css, ".game-frame__fullscreen");
 
   assertIncludes(header, "align-items: center;");
   assertIncludes(header, "display: flex;");
-  assertIncludes(header, "justify-content: space-between;");
+  assertIncludes(header, "justify-content: flex-end;");
   assertIncludes(header, "flex-wrap: wrap;");
-  assertIncludes(title, "margin-bottom: 0;");
+  assert.equal(css.includes(".game-play-header__title"), false, "removed visible Online title should not need title-specific styles");
   assertIncludes(button, "align-items: center;");
   assertIncludes(button, "backdrop-filter: blur(14px);");
   assertIncludes(button, "border-radius: 999px;");
