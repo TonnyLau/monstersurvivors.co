@@ -1,4 +1,5 @@
 import { readFileSync } from "node:fs";
+import { createHash } from "node:crypto";
 import { createRequire } from "node:module";
 import { join } from "node:path";
 
@@ -47,6 +48,13 @@ function byNewest(a, b) {
   return b.publishedAt.localeCompare(a.publishedAt);
 }
 
+function assetUrl(assetPath) {
+  const normalizedPath = assetPath.replace(/^\/+/, "");
+  const sourcePath = join(process.cwd(), "src", normalizedPath);
+  const hash = createHash("sha256").update(readFileSync(sourcePath)).digest("hex").slice(0, 12);
+  return `${assetPath}?v=${hash}`;
+}
+
 export default function (eleventyConfig) {
   eleventyConfig.addPassthroughCopy({ "src/assets": "assets" });
 
@@ -55,6 +63,8 @@ export default function (eleventyConfig) {
   });
 
   eleventyConfig.addFilter("json", (value) => JSON.stringify(value));
+
+  eleventyConfig.addFilter("assetUrl", assetUrl);
 
   eleventyConfig.addFilter("featuredGameRecords", (featuredSlugs, games) => {
     const bySlug = new Map(games.map((game) => [game.slug, game]));

@@ -68,6 +68,24 @@ function cssBlock(css, selector) {
   return css.slice(bodyStart, end);
 }
 
+function mediaBlock(css, query) {
+  const marker = `@media ${query} {`;
+  const start = css.indexOf(marker);
+  assert.notEqual(start, -1, `Expected stylesheet to include @media ${query}`);
+  const blockStart = css.indexOf("{", start);
+  assert.notEqual(blockStart, -1, `Expected stylesheet media block for ${query} to open`);
+
+  let depth = 0;
+  for (let index = blockStart; index < css.length; index++) {
+    const char = css[index];
+    if (char === "{") depth++;
+    if (char === "}") depth--;
+    if (depth === 0 && index > start) return css.slice(start, index + 1);
+  }
+
+  assert.fail(`Expected stylesheet media block for ${query} to close`);
+}
+
 function loadNormalizedCatalog() {
   const { buildCatalog } = require("../src/_data/catalog-utils.cjs");
   return buildCatalog(JSON.parse(read("src/_data/embed.json")));
@@ -328,7 +346,10 @@ test("global header includes static search controls and mobile menu", () => {
   assertIncludes(html, 'data-search-empty');
   assertIncludes(html, 'rel="icon" href="/assets/images/favicon.svg" type="image/svg+xml"');
   assertIncludes(html, ">ArcadeNest</a>");
-  assertIncludes(html, 'src="/assets/js/site.js"');
+  assert.match(html, /<script src="\/assets\/js\/site\.js\?v=[a-f0-9]{12}" defer><\/script>/);
+  assert.match(html, /<link rel="stylesheet" href="\/assets\/css\/styles\.css\?v=[a-f0-9]{12}">/);
+  assert.equal(html.includes('src="/assets/js/site.js"'), false, "generated pages should cache-bust site.js");
+  assert.equal(html.includes('href="/assets/css/styles.css"'), false, "generated pages should cache-bust styles.css");
 });
 
 test("stylesheet reserves desktop header auth space beside search", () => {
@@ -518,12 +539,15 @@ test("fullscreen script wires game frame controls to the Fullscreen API", () => 
 test("stylesheet places fullscreen control in the game title bar", () => {
   const css = read("src/assets/css/styles.css");
   const header = cssBlock(css, ".game-play-header");
+  const mobile = mediaBlock(css, "(max-width: 640px)");
   const button = cssBlock(css, ".game-frame__fullscreen");
 
   assertIncludes(header, "align-items: center;");
   assertIncludes(header, "display: flex;");
   assertIncludes(header, "justify-content: flex-end;");
   assertIncludes(header, "flex-wrap: wrap;");
+  assertIncludes(mobile, ".game-play-header");
+  assertIncludes(mobile, "justify-content: center;");
   assert.equal(css.includes(".game-play-header__title"), false, "removed visible Online title should not need title-specific styles");
   assertIncludes(button, "align-items: center;");
   assertIncludes(button, "backdrop-filter: blur(14px);");
