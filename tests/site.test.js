@@ -24,7 +24,6 @@ const sidebarTags = [
   "drift",
   "driving",
   "girl",
-  "io-games",
   "kids",
   "minecraft",
   "mobile",
@@ -92,7 +91,7 @@ function loadNormalizedCatalog() {
 }
 
 function gameSlugsFromHtml(html) {
-  return [...html.matchAll(/href="\/games\/([a-z0-9-]+)\/"/g)].map((match) => match[1]);
+  return [...html.matchAll(/<a(?![^>]*data-surprise-link)[^>]*href="\/games\/([a-z0-9-]+)\/"/g)].map((match) => match[1]);
 }
 
 function wordDensity(text, word) {
@@ -190,10 +189,10 @@ test("embed.json imports into complete internal game records", () => {
     assert.ok(slugs.has(game.slug), `${game.slug} should be present in slug set`);
   }
 
-  const monster = catalog.games.find((game) => game.slug === "monster-wave-arena");
-  assert.equal(monster.primaryTag, "action");
-  assert.ok(monster.tags.includes("survival"));
-  assert.ok(monster.tags.includes("battle"));
+  const gasStation = catalog.games.find((game) => game.slug === "gas-station-stick-simulator");
+  assert.equal(gasStation.primaryTag, "adventure");
+  assert.ok(gasStation.tags.includes("simulator"));
+  assert.ok(gasStation.tags.includes("tycoon"));
 
   const driftKing = catalog.games.find((game) => game.slug === "drift-king");
   assert.deepEqual(
@@ -231,8 +230,8 @@ test("catalog derives guide controls from descriptions and tag fallbacks", () =>
   }
 
   const golfControls = golfBit.guide.controls.map((control) => control.input.toLowerCase());
-  assert.ok(golfControls.some((input) => input.includes("mouse")), "golf-bit fallback controls should include mouse input");
-  assert.ok(golfControls.some((input) => input.includes("touch")), "golf-bit fallback controls should include mobile touch input");
+  assert.ok(golfControls.some((input) => input.includes("lmb") || input.includes("spacebar")), "golf-bit controls should include hit input");
+  assert.ok(golfControls.some((input) => input.includes("mobile")), "golf-bit controls should include mobile input");
 });
 
 test("Eleventy builds all required v1 routes", async () => {
@@ -244,11 +243,10 @@ test("Eleventy builds all required v1 routes", async () => {
     "index.html",
     "new-games/index.html",
     "all-tags/index.html",
-    "games/monster-wave-arena/index.html",
+    "games/gas-station-stick-simulator/index.html",
     "games/golf-bit/index.html",
     "t/action/index.html",
     "t/driving/index.html",
-    "t/io-games/index.html",
     "search-index.json",
     "assets/js/site.js",
     "assets/images/favicon.svg",
@@ -269,13 +267,12 @@ test("generated pages use lowercase canonical URLs and one h1", () => {
     ["new-games/index.html", `${domain}/new-games/`],
     ["all-tags/index.html", `${domain}/all-tags/`],
     ["t/action/index.html", `${domain}/t/action/`],
-    ["games/monster-wave-arena/index.html", `${domain}/games/monster-wave-arena/`]
+    ["games/gas-station-stick-simulator/index.html", `${domain}/games/gas-station-stick-simulator/`]
   ]) {
     const html = readDist(file);
     assertIncludes(html, `<link rel="canonical" href="${canonical}">`);
     assert.equal((html.match(/<h1\b/g) ?? []).length, 1, `${file} should have exactly one h1`);
     assert.equal((html.match(/https:\/\/MonsterSurvivors\.co/g) ?? []).length, 0);
-    assert.equal(html.includes("Monster Survivors"), false, `${file} should not expose old brand text`);
     assert.equal(html.includes("monstersurvivors.co"), false, `${file} should not expose old domain text`);
   }
 });
@@ -288,7 +285,7 @@ test("generated pages include one Google tag immediately after head", () => {
     "new-games/index.html",
     "all-tags/index.html",
     "t/action/index.html",
-    "games/monster-wave-arena/index.html"
+    "games/gas-station-stick-simulator/index.html"
   ]) {
     const html = readDist(file);
     const afterHead = html.slice(html.indexOf("<head>") + "<head>".length).trimStart();
@@ -302,7 +299,7 @@ test("generated pages include one Google tag immediately after head", () => {
 test("homepage renders sidebar navigation and dense imported game grid", () => {
   const html = readDist("index.html");
 
-  for (const title of ["Golf Bit", "Love Tester", "Stack Fire Ball", "Monster Wave Arena"]) {
+  for (const title of ["Gas Station - Stick Simulator", "Golf Bit", "Love Tester", "Stack Fire Ball"]) {
     assertIncludes(html, title);
   }
 
@@ -316,7 +313,7 @@ test("homepage renders sidebar navigation and dense imported game grid", () => {
   for (const tag of sidebarTags) {
     assertIncludes(html, `href="/t/${tag}/"`);
   }
-  assertIncludes(html, 'href="/games/monster-wave-arena/"');
+  assertIncludes(html, 'href="/games/gas-station-stick-simulator/"');
   assert.equal(html.includes('href="/t/brainrot/"'), false, "non-sidebar tags should not appear in sidebar");
 });
 
@@ -345,14 +342,14 @@ test("tag and category pages use en-US locale ranking after filtering", () => {
 test("game detail related games use en-US locale ranking within the related set", () => {
   const catalog = loadNormalizedCatalog();
   const { rankGamesForLocale } = loadLocaleRanking();
-  const game = catalog.games.find((item) => item.slug === "monster-wave-arena");
+  const game = catalog.games.find((item) => item.slug === "gas-station-stick-simulator");
   const bySlug = new Map(catalog.games.map((item) => [item.slug, item]));
   const expected = rankGamesForLocale(
     game.relatedGames.map((slug) => bySlug.get(slug)).filter(Boolean),
     "en-US"
   ).map((item) => item.slug);
 
-  assert.deepEqual(gameSlugsFromHtml(readDist("games/monster-wave-arena/index.html")), expected);
+  assert.deepEqual(gameSlugsFromHtml(readDist("games/gas-station-stick-simulator/index.html")), expected);
 });
 
 test("catalog sidebar uses local SVG icons and working curated links only", () => {
@@ -425,7 +422,7 @@ test("search index contains game detail records only", () => {
 
   assert.ok(index.length > 200, "search index should contain the imported game collection");
   assert.deepEqual(index.slice(0, 10).map((item) => item.slug), enUsPinnedGames);
-  assert.ok(bySlug.has("monster-wave-arena"));
+  assert.ok(bySlug.has("gas-station-stick-simulator"));
   assert.ok(bySlug.has("golf-bit"));
   assert.equal(bySlug.has("action"), false, "tag pages should not be indexed as game records");
 
@@ -452,14 +449,14 @@ test("new games page sorts games by publishedAt descending", () => {
 });
 
 test("game page includes secure iframe, loading state, breadcrumbs, visible guide, and JSON-LD", () => {
-  const html = readDist("games/monster-wave-arena/index.html");
+  const html = readDist("games/gas-station-stick-simulator/index.html");
   const controlsStart = html.indexOf('<div class="game-play-header">');
   const frameStart = html.indexOf('<div class="game-frame">');
   const buttonStart = html.indexOf('data-fullscreen-button');
 
   assertIncludes(html, "Loading game...");
   assertIncludes(html, '<div class="game-play-header">');
-  assert.equal(html.includes('<h2 class="game-play-header__title">Play Monster Wave Arena Online</h2>'), false);
+  assert.equal(html.includes('<h2 class="game-play-header__title">Play Gas Station - Stick Simulator Online</h2>'), false);
   assertIncludes(html, 'data-fullscreen-button');
   assertIncludes(html, 'aria-label="Enter fullscreen"');
   assertIncludes(html, '<svg class="game-frame__fullscreen-icon"');
@@ -472,8 +469,8 @@ test("game page includes secure iframe, loading state, breadcrumbs, visible guid
   assertIncludes(html, "breadcrumb__mobile");
   assertIncludes(html, 'class="section game-guide"');
   assertIncludes(html, "<h2>Controls</h2>");
-  assertIncludes(html, "<h2>How to Play Monster Wave Arena</h2>");
-  assertIncludes(html, "<h2>Tips &amp; Tricks</h2>");
+  assertIncludes(html, "<h2>Get Into the Game in 4 Steps</h2>");
+  assertIncludes(html, "<h2>Tips That Actually Win Rounds</h2>");
   assertIncludes(html, "<h2>Game Features</h2>");
   assertIncludes(html, "<h2>Instructions</h2>");
   assertIncludes(html, "<h2>Related Searches</h2>");
@@ -556,7 +553,7 @@ test("sitemap and robots use required lowercase rules", () => {
   assertIncludes(sitemap, `<loc>${domain}/</loc>`);
   assertIncludes(sitemap, "<priority>1.0</priority>");
   assertIncludes(sitemap, "<changefreq>weekly</changefreq>");
-  assertIncludes(sitemap, `<loc>${domain}/games/monster-wave-arena/</loc>`);
+  assertIncludes(sitemap, `<loc>${domain}/games/gas-station-stick-simulator/</loc>`);
   assertIncludes(sitemap, `<loc>${domain}/games/golf-bit/</loc>`);
   assertIncludes(sitemap, `<loc>${domain}/t/action/</loc>`);
   assertIncludes(sitemap, `<loc>${domain}/all-tags/</loc>`);

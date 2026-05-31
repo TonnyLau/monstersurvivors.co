@@ -27,7 +27,13 @@ eleventyComputed:
 
 <section class="page-hero">
   <h1>{{ game.title }}</h1>
-  <p>{{ game.description }}</p>
+  <p class="page-hero__tagline">{{ game.tagline }}</p>
+  <p>{{ game.heroDescription }}</p>
+  <div class="quick-facts" aria-label="{{ game.title }} quick facts">
+    {% for fact in game.quickFacts %}
+      <span><strong>{{ fact.label }}</strong>{{ fact.value }}</span>
+    {% endfor %}
+  </div>
 </section>
 
 <section class="section">
@@ -54,7 +60,19 @@ eleventyComputed:
 
 <section class="section game-guide" aria-label="{{ game.title }} guide sections">
   <article class="guide-card guide-card--wide">
-    <h2>Overview</h2>
+    <h2>Why Play {{ game.title }} on ArcadeNest?</h2>
+    <div class="benefit-list">
+      {% for benefit in game.guide.platformBenefits %}
+        <section>
+          <h3>{{ benefit.title }}</h3>
+          <p>{{ benefit.text }}</p>
+        </section>
+      {% endfor %}
+    </div>
+  </article>
+
+  <article class="guide-card guide-card--wide">
+    <h2>What to Expect</h2>
     {% for paragraph in game.guide.overview %}
       <p>{{ paragraph }}</p>
     {% endfor %}
@@ -62,6 +80,7 @@ eleventyComputed:
 
   <article class="guide-card">
     <h2>Controls</h2>
+    <p class="guide-note">Pro tip: start with the default controls, then adjust sensitivity or camera settings inside the game if aiming or movement feels off.</p>
     <dl class="control-list">
       {% for control in game.guide.controls %}
         <div class="control-list__item">
@@ -73,7 +92,7 @@ eleventyComputed:
   </article>
 
   <article class="guide-card">
-    <h2>How to Play {{ game.title }}</h2>
+    <h2>Get Into the Game in 4 Steps</h2>
     <ol class="how-to-list">
       {% for step in game.guide.howToPlay %}
         <li>
@@ -85,7 +104,7 @@ eleventyComputed:
   </article>
 
   <article class="guide-card">
-    <h2>Tips &amp; Tricks</h2>
+    <h2>Tips That Actually Win Rounds</h2>
     <ul class="tips-list">
       {% for tip in game.guide.tips %}
         <li>{{ tip }}</li>
@@ -97,7 +116,10 @@ eleventyComputed:
     <h2>Game Features</h2>
     <div class="feature-list guide-feature-list">
       {% for feature in game.features %}
-        <span>{{ feature }}</span>
+        <section>
+          <h3>{{ feature.title }}</h3>
+          <p>{{ feature.text }}</p>
+        </section>
       {% endfor %}
     </div>
   </article>
@@ -137,11 +159,12 @@ eleventyComputed:
 
 <section class="section section--surface">
   <div class="section__heading">
-    <h2>More {{ primaryTag.label }} Games</h2>
+    <h2>Still Got Energy? Keep Playing.</h2>
+    <p>Try more fast-loading {{ primaryTag.label | lower }} games picked from the same ArcadeNest catalog.</p>
   </div>
-  <div class="game-grid">
+  <div class="game-grid related-game-grid">
     {% for related in game.relatedGames | relatedGameRecords(games.games, currentLocale) %}
-      {{ cards.card(related, false) }}
+      {{ cards.relatedCard(related, loop.index0, "Similar to " + primaryTag.label) }}
     {% endfor %}
   </div>
 </section>

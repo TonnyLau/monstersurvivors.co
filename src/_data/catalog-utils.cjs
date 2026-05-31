@@ -11,7 +11,6 @@ const SIDEBAR_TAGS = [
   "drift",
   "driving",
   "girl",
-  "io-games",
   "kids",
   "minecraft",
   "mobile",
@@ -75,6 +74,22 @@ function shortDescription(description) {
   return `${text.slice(0, 147).trim()}...`;
 }
 
+function compactDescription(description) {
+  const text = String(description).replace(/\s+/g, " ").trim();
+  const firstSentence = text.match(/[^.!?]+[.!?]+/)?.[0]?.trim();
+  const compact = firstSentence || text;
+  if (compact.length <= 96) return compact;
+  return `${compact.slice(0, 93).trim()}...`;
+}
+
+function sentenceSummary(description, maxSentences = 2) {
+  const text = String(description).replace(/\s+/g, " ").trim();
+  const sentences = text.match(/[^.!?]+[.!?]+/g) ?? [];
+  const summary = sentences.slice(0, maxSentences).join(" ").trim();
+  if (summary) return summary;
+  return shortDescription(text);
+}
+
 function cleanDescriptionFromOverview(overview, title, primaryTag) {
   const text = overview
     .join(" ")
@@ -94,6 +109,19 @@ function cleanSourceText(value) {
     .trim();
 }
 
+function sectionizeSourceText(value) {
+  return cleanSourceText(value)
+    .replace(/\b(Controls|Instructions|Table of Contents)\b/g, "\n\n$1\n")
+    .replace(/\b(How\s+To\s+Play\b[^.!?\n]{0,80})/g, "\n\n$1\n")
+    .replace(/\b(How\s+to\s+Play\b[^.!?\n]{0,80})/g, "\n\n$1\n")
+    .replace(/\b(Tips?\s*(?:&|and)?\s*Tricks\b[^.!?\n]{0,80})/g, "\n\n$1\n")
+    .replace(/\b(Key\s+Features\b[^.!?\n]{0,80})/g, "\n\n$1\n")
+    .replace(/\b([A-Z][A-Za-z0-9'’&!,-]*(?:\s+(?:-|[A-Za-z0-9'’&!,-]+)){0,8}\s+Overview)\b/g, "\n\n$1\n")
+    .replace(/\b(Developer|More Games Like This|Similar Games|You May Also Like|Looking for More|What is More)\b/g, "\n\n$1\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
 function isGuideHeading(line) {
   const text = line.trim().toLowerCase();
   return (
@@ -102,7 +130,14 @@ function isGuideHeading(line) {
     text === "table of contents" ||
     /^how\s+to\s+play\b/.test(text) ||
     /^tips?\b/.test(text) ||
-    /^key\s+features\b/.test(text)
+    /^key\s+features\b/.test(text) ||
+    /^developer\b/.test(text) ||
+    /^more\s+games\s+like\s+this\b/.test(text) ||
+    /^similar\s+games\b/.test(text) ||
+    /^you\s+may\s+also\s+like\b/.test(text) ||
+    /^looking\s+for\s+more\b/.test(text) ||
+    /^what\s+is\s+more\b/.test(text) ||
+    /^.+\s+overview$/.test(text)
   );
 }
 
@@ -112,11 +147,26 @@ function splitMeaningfulParagraphs(text) {
     .map((paragraph) => paragraph.replace(/\s+/g, " ").trim())
     .filter(Boolean)
     .filter((paragraph) => !isGuideHeading(paragraph))
-    .filter((paragraph) => !/^(?:wasd|arrow|mouse|space|spacebar|shift|ctrl|tab|enter|esc|left|right|up|down|[a-z0-9][/a-z0-9 +.-]{0,30}):\s+/i.test(paragraph));
+    .filter((paragraph) => !/^(?:wasd|arrow|mouse|space|spacebar|shift|ctrl|tab|enter|esc|left|right|up|down|lmb|rmb):\s+/i.test(paragraph));
 }
 
-function overviewParagraphs(description) {
-  const text = cleanSourceText(description);
+function overviewParagraphs(description, title) {
+  const sourceText = cleanSourceText(description);
+  if (sourceText.toLowerCase().startsWith("table of contents") && title) {
+    const marker = `what is ${String(title).toLowerCase()}?`;
+    const first = sourceText.toLowerCase().indexOf(marker);
+    const second = first === -1 ? -1 : sourceText.toLowerCase().indexOf(marker, first + marker.length);
+
+    if (second !== -1) {
+      const body = sectionizeSourceText(sourceText.slice(second + marker.length));
+      const bodyLines = body.split("\n");
+      const end = bodyLines.findIndex((line) => isGuideHeading(line));
+      const paragraphs = splitMeaningfulParagraphs(bodyLines.slice(0, end === -1 ? undefined : end).join("\n"));
+      if (paragraphs.length > 0) return paragraphs.slice(0, 2);
+    }
+  }
+
+  const text = sectionizeSourceText(description);
   const lines = text.split("\n");
   let firstGuideLine = lines.findIndex((line) => isGuideHeading(line));
   let introStart = 0;
@@ -141,7 +191,7 @@ function overviewParagraphs(description) {
 }
 
 function controlSection(description) {
-  const text = cleanSourceText(description);
+  const text = sectionizeSourceText(description);
   const lines = text.split("\n");
   const start = lines.findIndex((line) => line.trim().toLowerCase() === "controls");
   if (start === -1) return "";
@@ -165,6 +215,42 @@ function normalizeControlAction(value) {
     .replace(/\.$/, "");
 }
 
+function controlEntriesFromLine(line) {
+  const inputPattern = [
+    "WASD(?:\\s+or\\s+(?:the\\s+)?(?:Arrows?|arrow\\s+keys|Arrow\\s+keys))?",
+    "(?:Arrow|arrow)\\s+keys?",
+    "Arrows?",
+    "Mouse(?:\\s+Wheel)?",
+    "LMB\\s+or\\s+Spacebar",
+    "Left[-\\s]?Mouse(?:\\s+Button)?",
+    "Right[-\\s]?Mouse(?:\\s+Button)?",
+    "LMB",
+    "RMB",
+    "Space(?:bar)?",
+    "On\\s+Mobile\\s+Devices",
+    "Touch\\s+controls",
+    "(?:Left|Right|Up|Down)(?:\\s+Arrow)?",
+    "Shift",
+    "Ctrl",
+    "Tab",
+    "Esc",
+    "Enter",
+    "[A-Z0-9](?:\\s*/\\s*[A-Z0-9])?"
+  ].join("|");
+  const markers = [...line.matchAll(new RegExp(`(?:^|\\s)(${inputPattern}):\\s*`, "g"))];
+  if (markers.length === 0) return [];
+
+  return markers.map((marker, index) => {
+    const input = marker[1];
+    const actionStart = marker.index + marker[0].length;
+    const actionEnd = index + 1 < markers.length ? markers[index + 1].index : line.length;
+    return {
+      input,
+      action: line.slice(actionStart, actionEnd)
+    };
+  });
+}
+
 function parseControls(description) {
   const section = controlSection(description);
   if (!section) return [];
@@ -174,13 +260,13 @@ function parseControls(description) {
     const text = line.trim();
     if (!text || !text.includes(":") || /^player\s*\d*/i.test(text) || /^single player/i.test(text)) continue;
 
-    const [input, ...actionParts] = text.split(":");
-    const action = actionParts.join(":");
-    const cleanInput = normalizeControlLabel(input);
-    const cleanAction = normalizeControlAction(action);
+    for (const entry of controlEntriesFromLine(text)) {
+      const cleanInput = normalizeControlLabel(entry.input);
+      const cleanAction = normalizeControlAction(entry.action);
 
-    if ((cleanInput.length < 2 && !/^[A-Z0-9]$/.test(cleanInput)) || cleanInput.length > 64 || cleanAction.length < 2) continue;
-    controls.push({ input: cleanInput, action: cleanAction });
+      if ((cleanInput.length < 2 && !/^[A-Z0-9]$/.test(cleanInput)) || cleanInput.length > 64 || cleanAction.length < 2) continue;
+      controls.push({ input: cleanInput, action: cleanAction });
+    }
   }
 
   return controls.slice(0, 8);
@@ -232,23 +318,35 @@ function objectiveFor(tags, primaryTag) {
   return `focus on the main ${labelForTag(primaryTag).toLowerCase()} challenge and improve one run at a time`;
 }
 
+function actionVerbFor(tags, primaryTag) {
+  const tagSet = new Set(tags);
+  if (tagSet.has("drift")) return "master clean drifts";
+  if (tagSet.has("racing") || tagSet.has("driving") || tagSet.has("car")) return "take control fast";
+  if (tagSet.has("shooting") || tagSet.has("sniper")) return "lock onto the action";
+  if (tagSet.has("sports")) return "time the winning shot";
+  if (tagSet.has("puzzle")) return "solve the next move";
+  if (tagSet.has("clicker")) return "build momentum";
+  if (tagSet.has("survival")) return "stay alive under pressure";
+  return `jump into a ${labelForTag(primaryTag).toLowerCase()} challenge`;
+}
+
 function buildHowToPlay(title, tags, primaryTag) {
   return [
     {
-      title: "Start playing",
-      text: `Press play, let ${title} load in the browser, and check the first prompt or menu before rushing in.`
+      title: "Launch and look around",
+      text: `Press play, let ${title} load, and take a few seconds to read the first prompt or menu.`
     },
     {
-      title: "Learn the objective",
+      title: "Know what you are here to do",
       text: `Your goal is to ${objectiveFor(tags, primaryTag)}.`
     },
     {
-      title: "Use the controls",
-      text: "Follow the controls listed on this page and any extra on-screen prompts shown in the browser frame."
+      title: "Get comfortable with the controls",
+      text: "Use the control list here first, then follow any extra prompts shown inside the game frame."
     },
     {
-      title: "Improve each attempt",
-      text: "Replay short sessions, notice what caused mistakes, and adjust your timing, route, or upgrade choices."
+      title: "Run it back smarter",
+      text: "Replay short sessions, notice what cost you the run, and adjust your timing, route, or upgrade choices."
     }
   ];
 }
@@ -349,11 +447,61 @@ function buildTips(tags, primaryTag) {
   ];
 }
 
+function buildTagline(title, tags, primaryTag) {
+  return `Play ${title} online for free - no download, no sign-up, straight to the ${labelForTag(primaryTag).toLowerCase()} action.`;
+}
+
+function buildQuickFacts(tags, primaryTag) {
+  const tagSet = new Set(tags);
+  const facts = [
+    { label: "Free", value: "No cost to play" },
+    { label: "Instant Play", value: "Runs in your browser" },
+    { label: labelForTag(primaryTag), value: "Main category" }
+  ];
+
+  if (tagSet.has("multiplayer") || tagSet.has("2-player")) {
+    facts.push({ label: "Multiplayer", value: "Play with others or share a keyboard" });
+  } else if (tagSet.has("mobile")) {
+    facts.push({ label: "Mobile Ready", value: "Touch controls supported" });
+  } else {
+    facts.push({ label: "No Install", value: "Open and start playing" });
+  }
+
+  return facts.slice(0, 4);
+}
+
+function buildPlatformBenefits(title, primaryTag) {
+  return [
+    {
+      title: "Browser-based",
+      text: `${title} runs directly on ArcadeNest, so you can open it on a modern browser without setup.`
+    },
+    {
+      title: "Fast start",
+      text: "Skip downloads and account creation; load the page, press play, and get into the session."
+    },
+    {
+      title: "Free access",
+      text: `Play a focused ${labelForTag(primaryTag).toLowerCase()} game with no hidden fee from ArcadeNest.`
+    }
+  ];
+}
+
+function buildFeatureDetails(primaryTag) {
+  return [
+    { title: "Instant browser play", text: "No download, launcher, or install step." },
+    { title: "Free online gameplay", text: "Start playing without creating an account." },
+    { title: `${labelForTag(primaryTag)} category`, text: "Easy to find again from the ArcadeNest catalog." },
+    { title: "Modern browser support", text: "Built for quick sessions on current desktop and mobile browsers." }
+  ];
+}
+
 function buildGuide({ title, description, tags, primaryTag }) {
   const controls = parseControls(description);
-  const overview = overviewParagraphs(description);
+  const overview = overviewParagraphs(description, title);
   return {
     overview,
+    platformBenefits: buildPlatformBenefits(title, primaryTag),
     controls: controls.length > 0 ? controls : fallbackControls(tags),
     howToPlay: buildHowToPlay(title, tags, primaryTag),
     tips: buildTips(tags, primaryTag),
@@ -361,7 +509,7 @@ function buildGuide({ title, description, tags, primaryTag }) {
   };
 }
 
-function buildFaq(title, tags) {
+function buildFaq(title, tags, primaryTag) {
   const tagSet = new Set(tags);
   const faq = [
     {
@@ -371,6 +519,26 @@ function buildFaq(title, tags) {
     {
       question: `Do I need to install ${title}?`,
       answer: "No installation is required. It runs inside the browser iframe."
+    },
+    {
+      question: `Is ${title} the same game people search for online?`,
+      answer: `This page launches the playable browser version of ${title}. The experience may include the menus, ads, or loading screens provided by the game publisher.`
+    },
+    {
+      question: `Can I play ${title} with friends?`,
+      answer: tagSet.has("multiplayer") || tagSet.has("2-player")
+        ? "Yes. This game is tagged for multiplayer or two-player play, so check the in-game menu for the available mode."
+        : "This game is primarily a solo browser game. For shared play, browse ArcadeNest multiplayer and two-player categories."
+    },
+    {
+      question: `Does ${title} work on mobile?`,
+      answer: tagSet.has("mobile")
+        ? "Yes. It is tagged for mobile play, though some controls can still feel better on a larger screen."
+        : "It may load on mobile browsers, but keyboard or mouse controls can make the experience better."
+    },
+    {
+      question: `Why is there an ad before ${title}?`,
+      answer: `Some free online ${labelForTag(primaryTag).toLowerCase()} games show a short sponsor or publisher ad before loading. That helps keep the game free to play.`
     }
   ];
 
@@ -434,8 +602,12 @@ function normalizeGame(record, index) {
     status: "live",
     publishedAt: dateForIndex(index),
     description: cleanDescription,
+    heroDescription: sentenceSummary(cleanDescription, 2),
+    tagline: buildTagline(title, tags, primaryTag),
+    quickFacts: buildQuickFacts(tags, primaryTag),
     cleanDescription,
     shortDescription: shortDescription(cleanDescription),
+    compactDescription: compactDescription(cleanDescription),
     guide,
     seo: {
       title: `${title} - Play Free Online`,
@@ -452,18 +624,13 @@ function normalizeGame(record, index) {
       height: 512,
       alt: `${title} Online`
     },
-    features: [
-      "Instant browser play",
-      `${labelForTag(primaryTag)} category`,
-      "Free online gameplay",
-      "No download required"
-    ],
+    features: buildFeatureDetails(primaryTag),
     instructions: [
       `Press play to load ${title} in your browser.`,
-      "Use the controls shown by the browser frame.",
-      "Keep practicing to improve your score and progress."
+      `Focus first on how to ${actionVerbFor(tags, primaryTag)}.`,
+      "Use quick retries to learn the timing, controls, and safest route."
     ],
-    faq: buildFaq(title, tags),
+    faq: buildFaq(title, tags, primaryTag),
     relatedGames: []
   };
 }

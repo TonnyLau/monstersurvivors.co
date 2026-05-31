@@ -1,26 +1,48 @@
 ---
 layout: layouts/base.njk
-title: ArcadeNest Free Online Games - Racing & Arcade
-description: Play free online games on ArcadeNest, including racing, simulator, drift, car, clicker, sniper, survival, puzzle, and arcade games.
+title: Nearly 1,000 Free Online Games - ArcadeNest
+description: Play nearly 1,000 free online games on ArcadeNest with zero downloads, no sign-ups, and instant browser access to racing, simulator, shooting, survival, puzzle, and arcade games.
 ---
 {% import "components/game-card.njk" as cards %}
 {% import "components/sidebar-nav.njk" as sidebar %}
 {% set currentLocale = locale | default(site.locale) | default("en-US") %}
 {% set rankedGames = games.games | rankGamesForLocale(currentLocale) %}
+{% set surpriseGame = rankedGames[0] %}
 <div class="layout-shell layout-shell--catalog">
   {{ sidebar.catalogSidebar(games.sidebarTags, page.url, "") }}
 
   <div class="catalog-content">
     <section class="catalog-hero">
-      <h1>ArcadeNest Free Online Games</h1>
-      <p>ArcadeNest keeps {{ games.games.length }} free online games ready to launch instantly, with racing games, simulator games, drift games, car games, clicker games, sniper games, survival games, puzzle games, and arcade games you can play without an install.</p>
+      <h1>Nearly 1,000 Games. Zero Downloads. Endless Fun.</h1>
+      <p>No installs, no sign-ups, no waiting. Just open your browser and start playing racing, shooting, survival, puzzles, and more, all free and ready in seconds.</p>
+      <div class="catalog-hero__actions" aria-label="Homepage actions">
+        <a class="button button--primary" data-surprise-link href="/games/{{ surpriseGame.slug }}/">Surprise Me</a>
+        <a class="button button--secondary" href="#featured-games">Browse All Games</a>
+      </div>
+      <div class="trust-bar" aria-label="ArcadeNest catalog facts">
+        <span>Nearly 1,000 Games</span>
+        <span>Instant Browser Play</span>
+        <span>10+ Categories</span>
+        <span>Always Free</span>
+      </div>
     </section>
 
     <section class="catalog-section" id="featured-games" aria-labelledby="featured-games-title">
       <div class="section__heading">
-        <h2 id="featured-games-title">Play Free Online Games on ArcadeNest</h2>
-        <p>Scan the ArcadeNest catalog for fast browser games across racing, action, sports, shooting, driving, puzzle, and arcade categories.</p>
+        <h2 id="featured-games-title">What Are You In the Mood For?</h2>
+        <p>From high-speed drifts to last-player-standing survival, pick a vibe and find a game that starts fast.</p>
       </div>
+      <nav class="mood-tags" aria-label="Popular game moods">
+        <a href="/t/racing/">Racing &amp; Drift</a>
+        <a href="/t/shooting/">Shooting &amp; Sniper</a>
+        <a href="/t/puzzle/">Puzzle &amp; Chill</a>
+        <a href="/t/survival/">Survival</a>
+        <a href="/t/sports/">Sports</a>
+        <a href="/t/action/">Action</a>
+        <a href="/t/arcade/">Arcade Classics</a>
+        <a href="/new-games/">New Arrivals</a>
+      </nav>
+      <p class="scroll-hook">Scroll down. Your next favorite game is probably 3 rows away.</p>
       <div class="dense-game-grid dense-game-grid--home">
         {% for game in rankedGames %}
           {{ cards.denseCard(game) }}

@@ -18,7 +18,7 @@
     <h3>{{ game.title }}</h3>
     <p>{{ game.shortDescription }}</p>
     {% if game.status == 'live' %}
-      <a class="button button--primary" href="/games/{{ game.slug }}/">Play Now</a>
+      <a class="button button--primary button--play" href="/games/{{ game.slug }}/">Play Now</a>
     {% else %}
       <button class="button button--disabled" type="button" disabled>Coming Soon</button>
     {% endif %}
@@ -32,5 +32,29 @@
     <img src="{{ game.thumbnail.src }}" width="{{ game.thumbnail.width }}" height="{{ game.thumbnail.height }}" alt="{{ game.thumbnail.alt }}" loading="lazy">
     <span>{{ game.title }}</span>
   </a>
+</article>
+{% endmacro %}
+
+{% macro relatedCard(game, index=0, label="Similar") %}
+<article class="game-card related-game-card">
+  <div class="game-card__media">
+    <img src="{{ game.thumbnail.src }}" width="{{ game.thumbnail.width }}" height="{{ game.thumbnail.height }}" alt="{{ game.thumbnail.alt }}" loading="lazy">
+    <span class="related-game-card__label">{{ label }}</span>
+  </div>
+  <div class="game-card__body related-game-card__body">
+    <div class="game-card__meta">
+      {% if index == 0 %}
+        <span class="badge badge--featured">Hot</span>
+      {% elseif index == 1 %}
+        <span class="badge badge--new">New</span>
+      {% else %}
+        <span class="badge badge--similar">Similar</span>
+      {% endif %}
+      <span class="badge badge--live">Ready</span>
+    </div>
+    <h3>{{ game.title }}</h3>
+    <p>{{ game.compactDescription or game.shortDescription }}</p>
+    <a class="button button--primary button--play related-game-card__button" href="/games/{{ game.slug }}/">Play Now</a>
+  </div>
 </article>
 {% endmacro %}

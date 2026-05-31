@@ -83,6 +83,21 @@
     });
   }
 
+  var backToTop = document.querySelector("[data-back-to-top]");
+
+  function syncBackToTop() {
+    if (!backToTop) return;
+    backToTop.hidden = window.scrollY < 520;
+  }
+
+  if (backToTop) {
+    syncBackToTop();
+    window.addEventListener("scroll", syncBackToTop, { passive: true });
+    backToTop.addEventListener("click", function () {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+  }
+
   var root = document.querySelector("[data-search-root]");
   if (!root) return;
 
@@ -116,6 +131,23 @@
         });
     }
     return indexPromise;
+  }
+
+  var surpriseLink = document.querySelector("[data-surprise-link]");
+
+  function randomGame(games) {
+    if (!Array.isArray(games) || games.length === 0) return null;
+    return games[Math.floor(Math.random() * games.length)];
+  }
+
+  if (surpriseLink) {
+    surpriseLink.addEventListener("click", function (event) {
+      event.preventDefault();
+      loadIndex().then(function (games) {
+        var game = randomGame(games);
+        window.location.href = game && game.url ? game.url : surpriseLink.href;
+      });
+    });
   }
 
   function scoreGame(game, query) {
